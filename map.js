@@ -14,7 +14,7 @@ const gsiLayer = L.tileLayer(
 
 
 // GeoJSONを読み込む
-fetch('data/mydata.geojson')
+fetch('mydata.geojson')
     .then(response => response.json())
     .then(data => {
 
