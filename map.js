@@ -14,9 +14,20 @@ const gsiLayer = L.tileLayer(
 
 
 // GeoJSONを読み込む
-fetch('data/mydata.geojson')
-    .then(response => response.json())
+fetch('./data/mydata.geojson')
+    .then(response => {
+        console.log('status:', response.status);
+
+        if (!response.ok) {
+            throw new Error(
+                `GeoJSONを読み込めませんでした: HTTP ${response.status}`
+            );
+        }
+
+        return response.json();
+    })
     .then(data => {
+        console.log('GeoJSON:', data);
 
         L.geoJSON(data, {
             style: {
@@ -25,8 +36,8 @@ fetch('data/mydata.geojson')
                 fillOpacity: 0.2
             }
         }).addTo(map);
-
     })
     .catch(error => {
-        console.error('GeoJSONの読み込みに失敗しました:', error);
+        console.error(error);
+        alert(error.message);
     });
