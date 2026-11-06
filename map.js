@@ -21,7 +21,7 @@ fetch('data/mydata.geojson')
         L.geoJSON(data, {
             style: {
                 color: '#ff0000',
-                weight: 3,
+                weight: 5,
                 fillOpacity: 0.2
             }
         }).addTo(map);
