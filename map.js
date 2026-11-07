@@ -424,8 +424,8 @@ regionControl.onAdd = function(map) {
             label.appendChild(
                 document.createTextNode(
                     " " + regionName
-                );
-
+                 )
+            );
 
             container.appendChild(
                 label
