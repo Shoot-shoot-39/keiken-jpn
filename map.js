@@ -31,7 +31,7 @@ const gsiPale = L.tileLayer(
 );
 
 // 初期状態は標準地図
-gsiStd.addTo(map);
+gsiPale.addTo(map);
 
 
 // 背景地図の切り替え
