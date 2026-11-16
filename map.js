@@ -6,7 +6,8 @@ const map = L.map("map", {
     center: [35.5, 137.0],
     zoom: 5
 });
-
+const castlePane = map.createPane("castlePane");
+castlePane.style.zIndex = 650;
 
 // ==========================================================
 // 背景地図
@@ -319,45 +320,40 @@ async function loadCastles() {
 
 
         // 城のポイントレイヤー
-        castleLayer = L.geoJSON(
-            data,
-            {
+castleLayer = L.geoJSON(
+    data,
+    {
+        pane: "castlePane",
 
-                // すべての城を同じ見た目にする
-                pointToLayer:
-                    function(feature, latlng) {
-
-                        return L.circleMarker(
-                            latlng,
-                            {
-                                radius: 5,
-                                fillColor: "#800080",
-                                fillOpacity: 0.9,
-                                color: "#FFFFFF",
-                                weight: 1
-                            }
-                        );
-                    },
-
-
-                // クリック時のポップアップ
-                onEachFeature:
-                    function(feature, layer) {
-
-                        const name =
-                            feature.properties.Name;
-
-                        const category =
-                            feature.properties.区分;
-
-
-                        layer.bindPopup(
-                            `<b>${name}</b><br>` +
-                            `区分: ${category}`
-                        );
+        pointToLayer:
+            function(feature, latlng) {
+                return L.circleMarker(
+                    latlng,
+                    {
+                        radius: 5,
+                        fillColor: "#800080",
+                        fillOpacity: 0.9,
+                        color: "#FFFFFF",
+                        weight: 1
                     }
+                );
+            },
+
+        onEachFeature:
+            function(feature, layer) {
+                const name =
+                    feature.properties.Name;
+
+                const category =
+                    feature.properties.区分;
+
+                layer.bindPopup(
+                    `<b>${name}</b><br>` +
+                    `区分: ${category}`
+                );
             }
-        );
+    }
+);
 
 
         // 地図に追加
