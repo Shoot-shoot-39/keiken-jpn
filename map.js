@@ -34,7 +34,10 @@ const gsiPale = L.tileLayer(
 gsiPale.addTo(map);
 
 
+// ==========================================================
 // 背景地図の切り替え
+// ==========================================================
+
 const baseMaps = {
     "標準地図": gsiStd,
     "淡色地図": gsiPale
@@ -173,9 +176,7 @@ async function loadRegion(regionName) {
         const layer = L.geoJSON(
             data,
             {
-
                 style: getKeikenStyle,
-
 
                 onEachFeature:
                     function(feature, layer) {
@@ -256,7 +257,161 @@ function setRegionVisible(
 
 
 // ==========================================================
-// 地方ON/OFF用のチェックボックスを作成
+// 城データ
+// ==========================================================
+
+// 城GeoJSONは地方別ではなく全国1ファイル。
+// 初期状態では読み込まない。
+const castleFile = "castles.geojson";
+
+// 読み込み済みの城レイヤー
+let castleLayer = null;
+
+// 城データ読み込み中かどうか
+let loadingCastles = false;
+
+
+// ==========================================================
+// 城GeoJSON読み込み
+// ==========================================================
+
+async function loadCastles() {
+
+    // すでに読み込み済みなら、それを表示
+    if (castleLayer) {
+
+        castleLayer.addTo(map);
+
+        return;
+    }
+
+
+    // 読み込み中なら何もしない
+    if (loadingCastles) {
+        return;
+    }
+
+
+    loadingCastles = true;
+
+
+    console.log(
+        `城GeoJSONを読み込みます: ${castleFile}`
+    );
+
+
+    try {
+
+        const response = await fetch(
+            `data/${castleFile}`
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `${castleFile} の読み込みに失敗しました`
+            );
+        }
+
+
+        const data = await response.json();
+
+
+        // 城のポイントレイヤー
+        castleLayer = L.geoJSON(
+            data,
+            {
+
+                // すべての城を同じ見た目にする
+                pointToLayer:
+                    function(feature, latlng) {
+
+                        return L.circleMarker(
+                            latlng,
+                            {
+                                radius: 5,
+                                fillColor: "#800080",
+                                fillOpacity: 0.9,
+                                color: "#FFFFFF",
+                                weight: 1
+                            }
+                        );
+                    },
+
+
+                // クリック時のポップアップ
+                onEachFeature:
+                    function(feature, layer) {
+
+                        const name =
+                            feature.properties.Name;
+
+                        const category =
+                            feature.properties.区分;
+
+
+                        layer.bindPopup(
+                            `<b>${name}</b><br>` +
+                            `区分: ${category}`
+                        );
+                    }
+            }
+        );
+
+
+        // 地図に追加
+        castleLayer.addTo(map);
+
+
+        console.log(
+            "城GeoJSONの読み込み完了"
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "城GeoJSONの読み込みに失敗しました",
+            error
+        );
+
+        alert(
+            "城GeoJSONの読み込みに失敗しました。"
+        );
+    }
+    finally {
+
+        loadingCastles = false;
+    }
+}
+
+
+// ==========================================================
+// 城レイヤーのON/OFF
+// ==========================================================
+
+function setCastleVisible(visible) {
+
+    if (visible) {
+
+        loadCastles();
+
+    }
+    else {
+
+        if (castleLayer) {
+
+            map.removeLayer(
+                castleLayer
+            );
+        }
+    }
+}
+
+
+// ==========================================================
+// 経県値・城 ON/OFF用コントロール
 // ==========================================================
 
 const regionControl =
@@ -274,7 +429,10 @@ regionControl.onAdd = function(map) {
         );
 
 
-    // 地方タイトル
+    // ======================================================
+    // 経県値タイトル
+    // ======================================================
+
     const title =
         L.DomUtil.create(
             "div",
@@ -299,7 +457,6 @@ regionControl.onAdd = function(map) {
 
     allOnButton.innerHTML =
         "全ON";
-
 
     allOnButton.style.margin =
         "4px 4px 4px 0";
@@ -424,8 +581,9 @@ regionControl.onAdd = function(map) {
             label.appendChild(
                 document.createTextNode(
                     " " + regionName
-                 )
+                )
             );
+
 
             container.appendChild(
                 label
@@ -433,8 +591,81 @@ regionControl.onAdd = function(map) {
         });
 
 
+    // ------------------------------------------------------
+    // 城チェックボックス
+    // ------------------------------------------------------
+
+    const castleTitle =
+        L.DomUtil.create(
+            "div",
+            "",
+            container
+        );
+
+    castleTitle.style.marginTop =
+        "8px";
+
+    castleTitle.innerHTML =
+        "<b>城</b>";
+
+
+    const castleLabel =
+        L.DomUtil.create(
+            "label",
+            "",
+            container
+        );
+
+    castleLabel.style.display =
+        "block";
+
+
+    const castleCheckbox =
+        document.createElement(
+            "input"
+        );
+
+    castleCheckbox.type =
+        "checkbox";
+
+    castleCheckbox.dataset.castle =
+        "true";
+
+    // 初期状態はOFF
+    castleCheckbox.checked = false;
+
+
+    castleCheckbox.onchange =
+        function() {
+
+            setCastleVisible(
+                castleCheckbox.checked
+            );
+        };
+
+
+    castleLabel.appendChild(
+        castleCheckbox
+    );
+
+
+    castleLabel.appendChild(
+        document.createTextNode(
+            " 城"
+        )
+    );
+
+
+    container.appendChild(
+        castleLabel
+    );
+
+
+    // ======================================================
     // 地図操作がチェックボックスに
     // 伝播しないようにする
+    // ======================================================
+
     L.DomEvent.disableClickPropagation(
         container
     );
