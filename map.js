@@ -6,8 +6,11 @@ const map = L.map("map", {
     center: [35.5, 137.0],
     zoom: 5
 });
+
+// 城を市町村ポリゴンより前面に表示するためのpane
 const castlePane = map.createPane("castlePane");
 castlePane.style.zIndex = 650;
+
 
 // ==========================================================
 // 背景地図
@@ -31,7 +34,7 @@ const gsiPale = L.tileLayer(
     }
 );
 
-// 初期状態は標準地図
+// 現在の設定：初期状態は淡色地図
 gsiPale.addTo(map);
 
 
@@ -177,7 +180,9 @@ async function loadRegion(regionName) {
         const layer = L.geoJSON(
             data,
             {
+
                 style: getKeikenStyle,
+
 
                 onEachFeature:
                     function(feature, layer) {
@@ -319,41 +324,90 @@ async function loadCastles() {
         const data = await response.json();
 
 
+        // ==================================================
         // 城のポイントレイヤー
-castleLayer = L.geoJSON(
-    data,
-    {
-        pane: "castlePane",
+        // ==================================================
 
-        pointToLayer:
-            function(feature, latlng) {
-                return L.circleMarker(
-                    latlng,
-                    {
-                        radius: 5,
-                        fillColor: "#800080",
-                        fillOpacity: 0.9,
-                        color: "#FFFFFF",
-                        weight: 1
+        castleLayer = L.geoJSON(
+            data,
+            {
+
+                // 市町村ポリゴンより前面に表示
+                pane: "castlePane",
+
+
+                // ------------------------------------------
+                // StampGet_1 = 0 の城だけ表示
+                // ------------------------------------------
+
+                filter:
+                    function(feature) {
+
+                        return Number(
+                            feature.properties.StampGet_1
+                        ) === 0;
+                    },
+
+
+                // ------------------------------------------
+                // 城の見た目
+                // ------------------------------------------
+
+                pointToLayer:
+                    function(feature, latlng) {
+
+                        return L.circleMarker(
+                            latlng,
+                            {
+                                radius: 5,
+                                fillColor: "#800080",
+                                fillOpacity: 0.9,
+                                color: "#FFFFFF",
+                                weight: 1
+                            }
+                        );
+                    },
+
+
+                // ------------------------------------------
+                // クリック時のポップアップ
+                // ------------------------------------------
+
+                onEachFeature:
+                    function(feature, layer) {
+
+                        const no =
+                            Number(
+                                feature.properties["No."]
+                            );
+
+                        const name =
+                            feature.properties.Name;
+
+
+                        // No. から区分を判定
+                        let category = "";
+
+                        if (no >= 1 && no <= 100) {
+
+                            category =
+                                "100名城";
+
+                        }
+                        else if (no >= 101 && no <= 200) {
+
+                            category =
+                                "続100名城";
+                        }
+
+
+                        layer.bindPopup(
+                            `<b>${name}</b><br>` +
+                            `区分: ${category}`
+                        );
                     }
-                );
-            },
-
-        onEachFeature:
-            function(feature, layer) {
-                const name =
-                    feature.properties.Name;
-
-                const category =
-                    feature.properties.区分;
-
-                layer.bindPopup(
-                    `<b>${name}</b><br>` +
-                    `区分: ${category}`
-                );
             }
-    }
-);
+        );
 
 
         // 地図に追加
