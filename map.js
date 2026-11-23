@@ -602,7 +602,7 @@ regionControl.onAdd = function(map) {
         "8px";
 
     castleTitle.innerHTML =
-        "<b>城</b>";
+        "<b>100/続100名城</b>";
 
 
     const castleLabel =
@@ -647,7 +647,7 @@ regionControl.onAdd = function(map) {
 
     castleLabel.appendChild(
         document.createTextNode(
-            " 城"
+            " 未訪問"
         )
     );
 
